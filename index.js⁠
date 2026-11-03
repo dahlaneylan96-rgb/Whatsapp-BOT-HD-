@@ -1,0 +1,36 @@
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
+
+const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    }
+});
+
+client.on('qr', (qr) => {
+    qrcode.generate(qr, { small: true });
+    console.log('Sila imbas kod QR pada log Render nanti.');
+});
+
+client.on('ready', () => {
+    console.log('Bot sudah bersedia dan aktif!');
+});
+
+client.on('message', async (msg) => {
+    const chat = await msg.getChat();
+
+    if (msg.body && !msg.hasMedia) {
+        await chat.sendMessage(
+            "Okey - hantar video atau gambar anda sekarang.\n\nPenting: hantar sebagai Document (Attach > Document), bukan Gallery."
+        );
+    }
+
+    if (msg.hasMedia) {
+        const media = await msg.downloadMedia();
+        await chat.sendMessage("----- 100%\n\nSiap! Media HD di atas.\n\nForward terus ke Status anda untuk kekalkan kualiti penuh.");
+        await chat.sendMessage(media, { sendAsDocument: true });
+    }
+});
+
+client.initialize();
